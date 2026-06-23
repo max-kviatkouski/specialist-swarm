@@ -1,9 +1,10 @@
 """
-Create the coordinator agent that orchestrates the specialist swarm.
+Create the Senior Wealth Advisor coordinator for the swarm.
 
-The coordinator's roster is the four specialists created by create_specialists.py.
-The coordinator decides which specialists to consult, in what order, and how to
-synthesise their outputs into the final deliverable.
+The coordinator holds the FULL specialist roster and delegates to a SUBSET per
+client ticket (subset-selection = the "self-assembling team"). It synthesises the
+specialists' work, gets the Compliance Reviewer's verdict, writes a structured
+financial_plan.json, and produces a branded pptx deck.
 
 Saves the coordinator's ID to .coordinator_id.
 
@@ -15,66 +16,92 @@ import json
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 from anthropic import Anthropic
 
+load_dotenv()
 
-COORDINATOR_SYSTEM = """\
-You are the Senior Partner running the Deal Desk. An inbound RFP has just
-arrived. Your job is to orchestrate the specialists, synthesise their work,
-and produce a single branded proposal response document.
+# Compact skeleton of schemas/financial_plan.schema.json — keeps the coordinator's
+# JSON output conformant so the dashboard renderer and evals/validate_plan.py accept it.
+PLAN_SKELETON = """{
+  "generatedFor": str, "asOf": "YYYY-MM-DD", "advisor": str,
+  "ticketType": "NEW_CLIENT_PLAN|PORTFOLIO_REVIEW|RETIREMENT_READINESS|LIFE_EVENT",
+  "routedSpecialists": [str],            // the SUBSET you actually delegated to
+  "executiveSummary": [str],             // 3-6 bullets
+  "financialWellbeing": {"score": 0-100, "band": str, "drivers": [str]},
+  "riskProfile": {"capacityScore": 0-100, "toleranceScore": 0-100,
+                  "band": "Conservative|Moderate|Moderate Growth|Growth|Aggressive", "rationale": str},
+  "allocation": {
+    "current": [{"assetClass": str, "percent": num, "value": num}],   // percents sum ~100
+    "target":  [{"assetClass": str, "percent": num}],                 // percents sum ~100
+    "keyChanges": [str]},
+  "goals": [{"name": str, "targetYear": int, "targetAmount": num,
+             "fundedPercent": 0-100, "onTrack": bool, "gap": str, "recommendation": str}],
+  "marketContext": {"summary": str, "asOf": str, "sources": [str], "tacticalTilts": [str]},
+  "projections": {"assumptions": str,
+                  "series": [{"year": int, "age": int, "low": num, "mid": num, "high": num}]},
+  "recommendations": [{"id": str, "title": str, "detail": str,
+                       "priority": "high|medium|low", "owner": str}],
+  "compliance": {"verdict": "APPROVED|REVISE|STOP", "reviewer": str, "notes": [str]},
+  "disclaimers": str
+}"""
 
-# Your roster
+COORDINATOR_SYSTEM = f"""\
+You are the Senior Wealth Advisor running an advisory desk. A client's financial
+situation has just arrived as a ticket. You orchestrate specialists, synthesise
+their work, and produce a single personalised financial plan.
 
-You can call these specialists:
-- Pricing Specialist: commercial terms recommendation
-- Legal Reviewer: contract flags and counter-positions
-- Technical Fit Specialist: product capability fit
-- Competitive Intel Analyst: who else is in the deal and how to position
+# Your roster (delegate to a SUBSET — only who this client needs)
 
-# How to run a deal
+- Portfolio Analyst — current vs target allocation, concentration/cash-drag flags
+- Risk Profiler — risk capacity vs tolerance, assigns the band
+- Market Strategist — current market context (uses live web search)
+- Goals & Wellbeing Planner — retirement readiness, goal funding, wellbeing score
+- Tax & Estate Specialist — tax-efficient placement and sequencing
+- Compliance / Suitability Reviewer — APPROVED / REVISE / STOP gate
 
-1. Read the RFP yourself first. Note the customer, scope, and any obvious
-   curveballs.
+# Routing table (classify the ticket, then delegate ONLY the listed subset)
 
-2. Delegate to ALL FOUR specialists in parallel. Each gets:
-   - The full RFP text
-   - A clear, narrow brief stating what you need from them
-   - A deadline ("answer in one message, ~300 words")
+- NEW_CLIENT_PLAN      -> Portfolio, Risk, Market, Goals, Tax  (then Compliance)
+- PORTFOLIO_REVIEW     -> Portfolio, Goals                      (then Compliance)
+- RETIREMENT_READINESS -> Risk, Goals, Market                   (then Compliance)
+- LIFE_EVENT           -> Goals, Tax                            (then Compliance)
 
-3. Synthesise their outputs into a single proposal response. The response
-   should cover:
-   - Executive summary (3 bullets)
-   - Our understanding of the customer's need
-   - Why we're the right fit (drawing on Technical Fit + Competitive Intel)
-   - Commercial proposal (drawing on Pricing)
-   - Contract approach (drawing on Legal)
-   - Risks and how we mitigate them
+Delegate to your chosen subset IN PARALLEL (one message), each with a clear, narrow
+brief and a ~300-word limit. Do NOT wake specialists this client doesn't need —
+right-sizing the team is the point.
 
-4. Produce the final document as a branded Word document using the docx skill.
-   Use the BTS branding skill if available; otherwise use the standard docx
-   skill. The deliverable is the docx itself, not a chat message.
+# How to run a ticket
 
-# How to talk to specialists
-
-When delegating, be direct: "Pricing Specialist: for this RFP, recommend
-terms. Include discount band and red-line concessions. Cite past-wins.json
-where relevant."
-
-When you receive a specialist's reply, accept it. Don't second-guess. If
-you genuinely disagree, send the specialist a follow-up — but only if it
-matters.
+1. Read the client profile. Classify the ticketType.
+2. Delegate to the subset in parallel. Collect their replies.
+3. Synthesise a draft plan.
+4. Send the draft to the Compliance / Suitability Reviewer. Honour its verdict:
+   - APPROVED -> finalise.
+   - REVISE   -> fix the listed issues, re-submit (max twice).
+   - STOP     -> DO NOT ship a recommendation. Produce a plan whose
+                 compliance.verdict is "STOP" with the reviewer's reasons, and an
+                 executiveSummary explaining why the pitched approach was unsuitable.
+5. Write the final plan to a file named exactly `financial_plan.json` in the working
+   directory, matching this shape EXACTLY (valid JSON, no comments):
+{PLAN_SKELETON}
+   Put the SUBSET you used in routedSpecialists.
+6. Then use the pptx skill to produce a branded, personalised deck
+   `financial_plan.pptx` summarising the plan (cover with the client's name, an
+   allocation slide, goals slide, projection slide, recommendations, and the
+   compliance verdict). The deliverables are the two files, not a chat message.
 
 # Tone
 
-Senior partner running a real deal. Confident, terse, decisive. You move
-fast because the RFP deadline is real.
+Senior advisor. Confident, precise, fiduciary. You move fast but never recommend
+something that doesn't suit the client.
 """
 
 
 def main() -> None:
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
-    if not api_key:
-        raise SystemExit("Set ANTHROPIC_API_KEY before running.")
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        raise SystemExit("Set ANTHROPIC_API_KEY (export it or put it in .env) before running.")
 
     specialist_ids_path = Path(".specialist_ids.json")
     if not specialist_ids_path.exists():
@@ -82,15 +109,16 @@ def main() -> None:
     specialist_ids = json.loads(specialist_ids_path.read_text())
 
     client = Anthropic(
-        api_key=api_key,
         default_headers={"anthropic-beta": "managed-agents-2026-04-01"},
     )
 
     coordinator = client.beta.agents.create(
-        name="Deal Desk Senior Partner",
-        model="claude-opus-4-7",  # Coordinator deserves the most capable model
+        name="Senior Wealth Advisor",
+        model="claude-opus-4-8",  # The coordinator deserves the flagship model.
         system=COORDINATOR_SYSTEM,
         tools=[{"type": "agent_toolset_20260401"}],
+        # Pre-built Anthropic pptx skill for the branded deck deliverable.
+        skills=[{"type": "anthropic", "skill_id": "pptx"}],
         multiagent={
             "type": "coordinator",
             "agents": [
@@ -98,17 +126,13 @@ def main() -> None:
                 for agent_id in specialist_ids.values()
             ],
         },
-        metadata={
-            "hackathon": "partner-basecamp-2026",
-            "track": "specialist-swarm",
-            "role": "coordinator",
-        },
+        metadata={"project": "wealth-advisory-swarm", "role": "coordinator"},
     )
 
     Path(".coordinator_id").write_text(coordinator.id)
     print(f"Coordinator created: {coordinator.id}")
     print(f"Roster: {list(specialist_ids.keys())}")
-    print(f"\nNext: python upload_skills.py then python run_deal_desk.py")
+    print("\nNext: python setup_environment.py then python run_advisory.py")
 
 
 if __name__ == "__main__":

@@ -1,83 +1,86 @@
-# Option 3 — Specialist Swarm
+# AI Wealth Advisory Swarm
 
-**Concept landed:** Skills, plugins & sub-agents
-**Tech:** [Claude Managed Agents multi-agent](https://platform.claude.com/docs/en/managed-agents/multi-agent) + [custom Skills](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview) + the pre-built [docx skill](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/quickstart)
-**Time:** 60 minutes
-**Output:** A coordinator agent that fans work out to 3-5 specialist sub-agents, each with its own skills, that assemble a real branded Word document.
+A coordinator + specialist **swarm** that turns a client's financial situation into a
+personalized plan — Edward-Jones-style advice, built on Anthropic's
+[Managed Agents multi-agent API](https://platform.claude.com/docs/en/managed-agents/multi-agent)
++ custom [Skills](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview).
 
-## The pitch
+Drop a client ticket in → a **Senior Wealth Advisor** classifies it and delegates to the
+right **subset** of specialists → they analyze in parallel → a **Compliance / Suitability
+Reviewer** gates the result (and can say **STOP**) → out comes `financial_plan.json` + a
+branded `financial_plan.pptx`.
 
-This is the architecture that wins the next $50M transformation deal: **coordinator + specialists + skills**. It maps directly to how every services firm structures real work. A senior partner orchestrates; specialists (legal, pricing, technical) own their lanes; the senior partner synthesises and delivers.
+## The idea in one picture
 
-You're going to build exactly that, in 60 minutes, around a Deal Desk scenario. Drop an RFP in, get a branded response doc out, watch the parallelism happen in real time on the events stream.
+```
+client ticket ─▶ Senior Wealth Advisor (coordinator, opus-4-8)
+                   │  classify → delegate to a SUBSET (the team self-sizes)
+                   ├─▶ Portfolio Analyst        (sonnet · asset-allocation-playbook)
+                   ├─▶ Risk Profiler            (sonnet · risk-profiling)
+                   ├─▶ Market Strategist        (sonnet · live web_search)
+                   ├─▶ Goals & Wellbeing Planner(sonnet · financial-planning-playbook)
+                   ├─▶ Tax & Estate Specialist  (haiku)
+                   └─▶ Compliance Reviewer      (opus · APPROVED / REVISE / STOP)
+                         │
+                         ▼
+              financial_plan.json  +  financial_plan.pptx
+```
 
-## Setup (5 min)
+**Different client → different subset.** A simple `PORTFOLIO_REVIEW` wakes 2 specialists; a
+full `NEW_CLIENT_PLAN` wakes 5 + Compliance. You watch the team assemble itself on the event
+stream — that's the demo. (No NATS/message bus needed: the session event stream *is* the bus.)
 
-You need a workspace API key on the Console (multi-agent is currently in research preview — your workspace may need to be granted access).
+## Quickstart
 
 ```bash
-cd 03-specialist-swarm
+cp .env.sample .env        # then put your workspace ANTHROPIC_API_KEY in .env
+./run_demo.sh              # installs deps + runs the full pipeline against the default client
+```
+
+`run_demo.sh` runs the whole chain and leaves the deliverables in `outputs/`:
+
+```bash
+open outputs/financial_plan.pptx                              # the branded deck
+python evals/validate_plan.py outputs/financial_plan.json     # check the plan is well-formed
+```
+
+Run a different client to watch the swarm resize:
+
+```bash
+./run_demo.sh synthetic-data/clients/client-young-accumulator.md   # board shrinks to 2 lanes
+./run_demo.sh synthetic-data/clients/client-preretiree-stop.md     # Compliance returns STOP
+```
+
+> Requires a workspace API key granted the `managed-agents-2026-04-01` research-preview beta.
+
+### Manual steps (what run_demo.sh does)
+
+```bash
 pip install -r requirements.txt
-export ANTHROPIC_API_KEY="sk-ant-..."
+python create_specialists.py   # -> .specialist_ids.json  (6 specialists)
+python upload_skills.py        # uploads + attaches the 3 domain skills
+python create_coordinator.py   # -> .coordinator_id       (router + pptx skill)
+python setup_environment.py    # -> .environment_id
+python run_advisory.py [client.md]   # streams events, saves outputs/
 ```
 
-## Pick a scenario card
+## Demo scenario (3 presets)
 
-Three cards in [`scenario-cards.md`](./scenario-cards.md). Each gives you a coordinator + a different roster of specialists. Pick one. Different teams should pick different cards.
+| Client | Ticket | Subset | Punch |
+| --- | --- | --- | --- |
+| `client-mid-career-family.md` | NEW_CLIENT_PLAN | full roster | rich plan + APPROVED |
+| `client-young-accumulator.md` | PORTFOLIO_REVIEW | 2 lanes | board shrinks |
+| `client-preretiree-stop.md` | RETIREMENT_READINESS | full | **Compliance STOP** |
 
-## Core build (25 min)
+## Repo map
 
-1. **Create the specialists.** Run `python create_specialists.py`. This creates 3-4 sub-agents (Pricing, Legal, Technical Fit, Competitive) and saves their IDs to `.specialist_ids.json`.
+- `create_*.py`, `upload_skills.py`, `run_advisory.py` — the swarm pipeline
+- `skills/` — the three custom domain skills (allocation, risk, planning)
+- `synthetic-data/clients/` — demo client tickets · `synthetic-data/sample-plan.json` — render fixture
+- `schemas/financial_plan.schema.json` — the coordinator's output **contract**
+- `evals/` — `validate_plan.py` (structural) + `judge_plan.py` (LLM-as-judge)
+- `docs/ROADMAP.md` — plan & tracks · `docs/COST.md` — per-run cost · `docs/DECK_SPEC.md` — the HTML dashboard spec
 
-2. **Create the coordinator.** Run `python create_coordinator.py`. This creates the coordinator agent with `multiagent: coordinator` config, listing the specialists in its callable roster.
+## Notes
 
-3. **Upload the skills.** Run `python upload_skills.py`. This packages the custom skills in `skills/` and uploads them via the Skills API. Each specialist gets the skill that matches its domain.
-
-4. **Run the deal.** Run `python run_deal_desk.py`. This:
-   - Uploads the synthetic RFP (`synthetic-data/rfp-acme-corp.md`) as a file
-   - Starts a session against the coordinator
-   - Asks the coordinator to produce a full proposal response
-   - Streams the events so you can watch the parallel thread fan-out
-   - Saves the final docx to `outputs/proposal-response.docx`
-
-By minute 30 you have a Word document in `outputs/`, generated by a coordinator + specialists who each used their own skill.
-
-## Stretch goals (20 min)
-
-See [`stretch-goals.md`](./stretch-goals.md). The big ones:
-
-- **Custom firm-voice skill** — codify your own firm's voice (every services firm has one)
-- **Critic sub-agent** — add a fifth agent that reviews the coordinator's draft before it's finalised
-- **Memory across deals** — coordinator remembers past wins and re-uses the right ones
-- **Synthetic MCP for past wins** — wire up a fake CRM to the pricing specialist
-
-## Two-minute demo
-
-Two-monitor setup:
-- **Monitor 1:** the events stream from the coordinator session, scrolling. You'll see `session.thread_created` × 4, parallel `running`, then `agent.thread_message_received` flowing back. The visible parallelism IS the demo.
-- **Monitor 2:** open `outputs/proposal-response.docx`. Real document, branded, ready to send.
-
-Narrate the events stream while it runs. The room will get it.
-
-## What's in this folder
-
-```
-03-specialist-swarm/
-├── README.md
-├── scenario-cards.md
-├── stretch-goals.md
-├── requirements.txt
-├── create_specialists.py          (creates the sub-agents)
-├── create_coordinator.py          (creates the coordinator)
-├── upload_skills.py               (uploads custom skills via Skills API)
-├── run_deal_desk.py               (runs the full swarm against an RFP)
-├── stretch_critic_subagent.py     (stretch: critic agent)
-├── skills/                        (custom skills, one per specialist)
-│   ├── pricing-playbook/SKILL.md
-│   ├── legal-checklist/SKILL.md
-│   └── competitive-intel/SKILL.md
-└── synthetic-data/
-    ├── rfp-acme-corp.md           (the RFP that triggers the swarm)
-    ├── past-wins.json             (used by pricing specialist)
-    └── product-overview.md        (used by technical specialist)
-```
+All client data is **fictional** and for demo only — **not financial advice**.
