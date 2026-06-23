@@ -64,6 +64,13 @@ python setup_environment.py    # -> .environment_id
 python run_advisory.py [client.md]   # streams events, saves outputs/
 ```
 
+**Inspect a run.** Managed-agents sessions have **no web console page** — the API is the
+source of truth — so use the included viewer to see every agent thread and its output:
+
+```bash
+python show_session.py         # uses .last_session_id; add --full for untruncated output
+```
+
 ## Demo scenario (3 presets)
 
 | Client | Ticket | Subset | Punch |
