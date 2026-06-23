@@ -1,0 +1,32 @@
+I'll start by checking the environment and the pptx skill, then immediately classify and delegate. This ticket is clearly a **NEW_CLIENT_PLAN** (a complex household onboarding), so per my routing table I'll route to the full roster: Portfolio, Risk, Market, Goals, Tax — then Compliance gates the draft.
+
+Let me set up and delegate to all five specialists in parallel.All five specialists are working in parallel. While they run, I'll prepare by reading the pptx skill so I'm ready to build the deck the moment I have synthesized results.I'll read the pptxgenjs guide so I'm ready to build the deck from scratch once results are in.Tax & Estate plan received and logged. Awaiting Portfolio, Risk, Market, and Goals replies before I synthesize.Risk profile received — **Moderate Growth** band, with a documented capacity/tolerance gap flagged for Compliance. Awaiting Portfolio, Market, and Goals.Market context received — useful, current, and the strategist correctly insists the single-stock exit run on a tax-aware schedule, not a market-timing view. Awaiting Portfolio Analyst and Goals & Wellbeing Planner.Portfolio analysis received. Note: the Portfolio Analyst modeled a **Growth** target, but the Risk Profiler anchored the household to **Moderate Growth** (tolerance-limited, with a documented capacity/tolerance gap). I'll reconcile to Moderate Growth in synthesis — dialing equity down modestly and bonds up — to avoid a suitability mismatch. Awaiting the Goals & Wellbeing Planner before I draft.All five specialists have reported. I now have everything I need to synthesize. 
+
+One reconciliation I'm making before drafting: the Portfolio Analyst built a **Growth** target, but the Risk Profiler anchored the household to **Moderate Growth** (capacity 78 vs. tolerance 54, driven by a documented prior panic-sell). Per fiduciary suitability, I'm anchoring the target allocation to **Moderate Growth** — slightly lower equity, higher bonds — while still leveraging the household's high capacity. Now I'll send the full draft to the Compliance Reviewer for the verdict gate.Draft submitted to Compliance. Awaiting the verdict before I finalize the plan and build the deck.**Verdict: REVISE** — plan is fundamentally suitable; four disclosure/suitability gaps to close. All four are reasonable and I'll incorporate them, then re-submit for final sign-off:
+
+1. Projections reframed as probability ranges (no false precision).
+2. Explicit human-capital concentration disclosure (salary + 34% stock = same employer).
+3. Add own-occupation disability insurance for both earners + umbrella liability.
+4. RSU sale legal/tax mechanics (insider/blackout/10b5-1 feasibility, ordinary income/estimated-tax/withholding, possible AMT).
+
+Let me confirm the revisions with Compliance to secure approval.Revisions submitted for final compliance sign-off. Awaiting the updated verdict before writing the deliverables.**Verdict: APPROVED** — consistent with Reg BI best-interest standard, cleared to ship. Now I'll write the final `financial_plan.json` and build the branded deck.Let me validate the JSON, confirm the allocation percentages sum correctly, and set up the deck build environment.JSON validates cleanly — allocations sum to 100%, values to $1.25M, verdict APPROVED. Now I'll build the branded deck.Deck built. Now I'll render it to images and run visual QA with a fresh-eyes subagent.Slides 1–4 look clean and on-brand. Let me check 5–9.All nine slides render cleanly — on-brand, no overflow, charts and bars correct, compliance verdict prominent. Let me run the content QA check for any leftover placeholders, then publish both deliverables to outputs.The grep -c broke the chain (exit 1 on zero matches). Let me verify the copy actually happened and confirm slide structure.Both deliverables are published to `/mnt/session/outputs`. The `extract-text` helper isn't emitting in this environment, but the visual render already confirmed all 9 slides with correct content. Final JSON sanity check:Both deliverables are complete and published to `/mnt/session/outputs/`.
+
+## Engagement summary — The Sharma Household
+
+**Ticket classified:** `NEW_CLIENT_PLAN` (complex household) → routed to the **full roster** in parallel: Portfolio Analyst, Risk Profiler, Market Strategist, Goals & Wellbeing Planner, Tax & Estate Specialist, then the Compliance/Suitability gate.
+
+**The key judgment call I made in synthesis:** the Portfolio Analyst built toward a *Growth* target, but the Risk Profiler anchored the household to **Moderate Growth** — capacity is high (78) but tolerance is lower (54), driven by a documented prior panic-sell. Per fiduciary suitability I anchored to the lower score and dialed the target allocation down accordingly (≈64% equity + 10% real assets + 22% bonds + 4% cash), bridging the gap with behavioral guardrails rather than chasing return the client won't stomach.
+
+**Compliance verdict:** **APPROVED** — but only after one **REVISE** cycle. The reviewer required four fixes, all of which I incorporated before re-submitting:
+1. Projections reframed as Low/Mid/High scenario bands with probability-of-success ranges (no false precision).
+2. Explicit human-capital concentration disclosure (Anand's salary *and* the 34% stock are the same employer).
+3. Added own-occupation disability insurance for both earners + umbrella liability.
+4. RSU sale legal/tax mechanics (insider/blackout, 10b5-1 feasibility, ordinary-income/estimated-tax/AMT).
+
+**Headline recommendations:** diversify the 34% single-stock position to ≤8% on a fixed, tax-aware 10b5-1 schedule (never market-timed); clear the ~10% cash drag; rebuild international (7.8%→18%) and add real assets; open a second 529 and lift the savings rate to $90–105K/yr; codify an IPS; and close the insurance/estate gaps.
+
+**Deliverables:**
+- `financial_plan.json` — full structured plan, schema-valid, verdict APPROVED.
+- `financial_plan.pptx` — 9-slide branded deck (cover, executive summary, wellbeing & risk, allocation, goals, projection, recommendations, market context, compliance verdict + disclaimers).
+
+One honest caveat the plan states plainly: retirement is only ~53% funded after the 2032–2038 goal collisions — it's reachable, but only with the higher savings rate and the RSU diversification both executed.

@@ -1,0 +1,233 @@
+{
+  "generatedFor": "The Sharma Household — Anand & Priya Sharma",
+  "asOf": "2026-06-23",
+  "advisor": "Senior Wealth Advisor",
+  "ticketType": "NEW_CLIENT_PLAN",
+  "routedSpecialists": [
+    "Portfolio Analyst",
+    "Risk Profiler",
+    "Market Strategist",
+    "Goals & Wellbeing Planner",
+    "Tax & Estate Specialist",
+    "Compliance / Suitability Reviewer"
+  ],
+  "executiveSummary": [
+    "Strong foundation, two structural risks: dual ~$420K income, $1.25M investable at ages 46/44, a funded 6-month reserve and a cheap 3.1% fixed mortgage — offset by a 34% single-employer-stock concentration and ~10% idle cash.",
+    "Risk band set at Moderate Growth: high financial capacity (78) is deliberately throttled to behavioral tolerance (54) after a documented prior panic-sell. A written IPS, ±5% rebalancing bands and goal-linked glidepaths bridge the gap.",
+    "Human-capital concentration disclosed: Anand's salary and the 34% employer stock are the SAME employer, so a company downturn would hit income and ~one-third of the portfolio together. Diversify the RSU position promptly on a fixed, tax-aware 10b5-1 schedule — never market-timed.",
+    "Retirement (~$4.5M real / ~$6.8M nominal at 2040) is ~53% funded after goal draws. Estimated probability of fully funding the $180K/yr (real) spend is ~50–65% on the current path, rising to ~75–85% with higher savings plus diversification (illustrative ranges, not guarantees).",
+    "Both private-college goals are underfunded — open a second 529 immediately; the vacation home is ~89% funded. Redeploy excess cash, lift international (7.8%→18%) and add a real-assets sleeve, keep bonds short-to-intermediate, and close the insurance/estate gaps (disability, umbrella, living trust)."
+  ],
+  "financialWellbeing": {
+    "score": 50,
+    "band": "On Track — with gaps",
+    "drivers": [
+      "STRENGTH: Dual high-income household with $1.25M investable at 46/44; emergency fund fully funded; 3.1% fixed mortgage is a long-term tailwind.",
+      "RISK: 34% single-employer-stock concentration is the top portfolio risk — and it is the SAME employer as Anand's salary, so a company downturn hits income and ~one-third of the portfolio together (correlated downside).",
+      "RISK: ~10% idle cash creates drag; roughly $62.5K above the 6-month reserve is dead capital.",
+      "RISK: Two private-university goals (~$1.18M nominal combined) are severely underfunded and collide with the final retirement-savings sprint in 2032–2038.",
+      "GAP: Retirement is ~53% funded after goal draws — closeable by raising the savings rate and using all tax-advantaged space."
+    ]
+  },
+  "riskProfile": {
+    "capacityScore": 78,
+    "toleranceScore": 54,
+    "band": "Moderate Growth",
+    "rationale": "Objective capacity is high (dual stable incomes, 14-year horizon, funded reserve, cheap fixed mortgage), but stated tolerance is lower and revealed behavior is lower still — the household panic-sold to cash in a past selloff and regretted it. Per suitability rules the band anchors to the lower tolerance score, giving Moderate Growth. To bridge the gap without leaving return on the table, guardrails are required: a written IPS with a ~20% max-drawdown 'do-not-sell' covenant, ±5% rebalancing bands so re-entry is rules-driven, goal-linked college glidepaths, and a systematic RSU diversification rule. Capacity materially exceeds tolerance; do not move to a Growth posture without a documented tolerance re-assessment."
+  },
+  "allocation": {
+    "current": [
+      { "assetClass": "Employer single stock (RSU)", "percent": 34.0, "value": 425000 },
+      { "assetClass": "US equity (diversified)", "percent": 39.8, "value": 497000 },
+      { "assetClass": "International equity", "percent": 7.8, "value": 98000 },
+      { "assetClass": "Bonds", "percent": 8.4, "value": 105000 },
+      { "assetClass": "Cash / money market", "percent": 10.0, "value": 125000 }
+    ],
+    "target": [
+      { "assetClass": "US equity (diversified)", "percent": 38 },
+      { "assetClass": "International equity", "percent": 18 },
+      { "assetClass": "Bonds", "percent": 22 },
+      { "assetClass": "Alternatives / real assets (REIT, TIPS)", "percent": 10 },
+      { "assetClass": "Employer single stock (RSU)", "percent": 8 },
+      { "assetClass": "Cash / money market", "percent": 4 }
+    ],
+    "keyChanges": [
+      "Trim employer single stock 34% → \u22648% near-term (hard cap \u226410%, glide toward ~5%): sell ~$300K over ~4 quarters via a 10b5-1 plan, newest-vested lots first, specific-lot ID, paired with tax-loss harvesting and charitable gifting of the most-appreciated shares — on a fixed, non-market-timed cadence.",
+      "Eliminate cash drag: retain ~$62.5K (6-month reserve), earmark vacation-home cash in an HYSA/CD ladder, and dollar-cost the remaining excess into diversified equity over 6–9 months.",
+      "Rebuild international equity: 7.8% → 18%, rebalancing inside the 401(k) first to avoid taxable events.",
+      "Introduce a 10% real-assets sleeve (REIT/TIPS), held in tax-advantaged accounts.",
+      "Lift bonds 8.4% → 22% at short-to-intermediate duration now, gliding up 1–2 ppts/yr from 2033 as goals approach."
+    ]
+  },
+  "goals": [
+    {
+      "name": "Retire at 60 (2040) — $180K/yr in today's dollars",
+      "targetYear": 2040,
+      "targetAmount": 6807000,
+      "fundedPercent": 53,
+      "onTrack": false,
+      "gap": "~$1.9M–$3.2M nominal across mid-to-low scenarios after goal draws",
+      "recommendation": "Max both 401(k)s and add dual backdoor Roth (+ mega-backdoor if Anand's plan allows); raise total savings toward $90–105K/yr. Diversifying the RSU funds retirement and college simultaneously."
+    },
+    {
+      "name": "4-year private university — elder child (matriculates ~2032)",
+      "targetYear": 2032,
+      "targetAmount": 549000,
+      "fundedPercent": 13,
+      "onTrack": false,
+      "gap": "~$478K over 6 years",
+      "recommendation": "Boost the existing 529 to $18–20K/yr (grows to ~$210K, ~38% coverage); bridge the remainder from taxable/RSU proceeds — do not raid retirement."
+    },
+    {
+      "name": "4-year private university — younger child (matriculates ~2035)",
+      "targetYear": 2035,
+      "targetAmount": 635000,
+      "fundedPercent": 0,
+      "onTrack": false,
+      "gap": "~$635K over 9 years; no 529 opened yet",
+      "recommendation": "Open a 529 immediately and consider superfunding (5-year gift election); fund ~$15K/yr (grows to ~$200K) and cover the remainder from taxable/RSU proceeds."
+    },
+    {
+      "name": "Vacation-home down payment (~2034)",
+      "targetYear": 2034,
+      "targetAmount": 200000,
+      "fundedPercent": 89,
+      "onTrack": true,
+      "gap": "~$22K",
+      "recommendation": "Earmark the $125K cash into an 8-year CD/HYSA ladder and add ~$3K/yr; this also removes the cash-drag penalty on the portfolio."
+    }
+  ],
+  "marketContext": {
+    "summary": "As of late June 2026, US large-cap equities are richly valued but directionless: the S&P 500 is roughly flat YTD while the Shiller CAPE sits near 40 (about 25% above its long-term average), compressing forward returns for mega-cap tech. The Fed (under Chair Warsh) held at 3.50–3.75% on June 17 with a higher dot plot and real hike risk as inflation forecasts rose; the 10-year Treasury is ~4.5% and bond total returns are near zero YTD. International equities continue to outperform (ex-US ~+9% YTD, ~+31% trailing 12 months) on a weaker dollar and cheaper valuations, and long-run return projections favor international over US.",
+    "asOf": "2026-06-23",
+    "sources": [
+      "https://www.gurufocus.com/economic_indicators/56/sp-500-shiller-cape-ratio",
+      "https://www.usbank.com/investing/financial-perspectives/market-news/federal-reserve-interest-rate.html",
+      "https://tradingeconomics.com/united-states/government-bond-yield",
+      "https://finance.yahoo.com/news/vanguard-says-international-stocks-could-230700429.html",
+      "https://www.fidelity.com/learning-center/trading-investing/bond-market-outlook"
+    ],
+    "tacticalTilts": [
+      "Dollar-cost the idle cash into diversified equities over 6–9 months rather than a lump sum at stretched valuations; park the cushion in a CA/national tax-exempt money market while deploying.",
+      "Broaden US equity away from mega-cap tech (equal-weight or ex-tech blends) so RSU proceeds do not re-create the concentration problem.",
+      "Add a meaningful international/EM tilt (~20–25% of the equity sleeve) for cheaper valuations and USD diversification.",
+      "Keep bonds short-to-intermediate (2–5yr Treasuries + TIPS) until the rate path resolves; avoid extending duration into the hike risk.",
+      "For this high-bracket CA household, evaluate California municipal bonds in taxable accounts for a higher after-tax yield.",
+      "Run the concentrated-stock exit on its own fixed, tax-aware cadence — do NOT let any market view accelerate or delay it."
+    ]
+  },
+  "projections": {
+    "assumptions": "Base $1.25M; ~$70K/yr contributions; ~75/25 equity-bond mix; Low/Mid/High = 4%/6.5%/9% nominal gross returns (before goal withdrawals). Outcomes are illustrative scenario bands, not forecasts or guarantees. Estimated probability of fully funding the $180K/yr (real) retirement spend at 2040 is ~50–65% on the current ~$70K/yr trajectory, rising to ~75–85% if savings increase to $90–105K/yr AND the single-stock position is diversified. The 2032–2038 goal-collision window (two college timelines plus the vacation home) draws ~$1.3M from the pool and is not netted from the gross series below.",
+    "series": [
+      { "year": 2026, "age": 46, "low": 1370000, "mid": 1401250, "high": 1432500 },
+      { "year": 2027, "age": 47, "low": 1494800, "mid": 1562331, "high": 1631425 },
+      { "year": 2028, "age": 48, "low": 1624592, "mid": 1733882, "high": 1848253 },
+      { "year": 2029, "age": 49, "low": 1759576, "mid": 1916584, "high": 2084596 },
+      { "year": 2030, "age": 50, "low": 1899959, "mid": 2110162, "high": 2342210 },
+      { "year": 2031, "age": 51, "low": 2045957, "mid": 2317322, "high": 2623009 },
+      { "year": 2032, "age": 52, "low": 2197795, "mid": 2537948, "high": 2929080 },
+      { "year": 2033, "age": 53, "low": 2355707, "mid": 2772914, "high": 3262697 },
+      { "year": 2034, "age": 54, "low": 2519935, "mid": 3023153, "high": 3626340 },
+      { "year": 2035, "age": 55, "low": 2690732, "mid": 3289658, "high": 4022711 },
+      { "year": 2036, "age": 56, "low": 2868361, "mid": 3573486, "high": 4454755 },
+      { "year": 2037, "age": 57, "low": 3053095, "mid": 3875762, "high": 4925683 },
+      { "year": 2038, "age": 58, "low": 3245219, "mid": 4197687, "high": 5439994 },
+      { "year": 2039, "age": 59, "low": 3445028, "mid": 4540537, "high": 5999593 },
+      { "year": 2040, "age": 60, "low": 3652829, "mid": 4905672, "high": 6609556 }
+    ]
+  },
+  "recommendations": [
+    {
+      "id": "REC-01",
+      "title": "Diversify the employer single-stock concentration (top priority)",
+      "detail": "Trim the RSU position from 34% ($425K) to \u22648% near-term (hard cap \u226410%, glide toward ~5%): sell ~$300K over ~4 quarters via a Rule 10b5-1 plan — newest-vested lots first (little/no gain), specific-lot ID on low-basis lots, paired with tax-loss harvesting and charitable gifting of the most-appreciated shares (DAF). DO NOT market-time the exit. Confirm Anand's insider/blackout status and 10b5-1 feasibility before any sales; note RSU vesting and lot sales generate ordinary income plus capital gains (CA taxes gains as ordinary; NIIT applies) — coordinate estimated-tax payments/withholding and review AMT exposure so the schedule does not create a surprise liability. This also reduces correlated human-capital risk, since the stock and Anand's salary share one employer.",
+      "priority": "high",
+      "owner": "Portfolio Analyst & Tax & Estate Specialist"
+    },
+    {
+      "id": "REC-02",
+      "title": "Eliminate cash drag and deploy idle cash",
+      "detail": "Keep ~$62.5K as the 6-month reserve and earmark the vacation-home cash in an HYSA/CD ladder; dollar-cost the remaining excess (~5% of the portfolio) into diversified equity over 6–9 months. Hold the cushion in a CA/national tax-exempt money market while deploying to earn after-tax yield without duration risk.",
+      "priority": "high",
+      "owner": "Portfolio Analyst"
+    },
+    {
+      "id": "REC-03",
+      "title": "Rebuild diversification: international + real assets",
+      "detail": "Lift international equity from 7.8% to 18% and add a 10% real-assets sleeve (REIT/TIPS). Rebalance inside the 401(k) first to avoid taxable events; broaden US exposure away from mega-cap tech so RSU proceeds do not re-create concentration.",
+      "priority": "high",
+      "owner": "Portfolio Analyst"
+    },
+    {
+      "id": "REC-04",
+      "title": "Adopt a written Investment Policy Statement with behavioral guardrails",
+      "detail": "Codify a ~20% max-drawdown 'do-not-sell' covenant, ±5% rebalancing bands, goal-linked college glidepaths (elder and younger on separate timers), and a systematic RSU diversification rule. This directly addresses the prior panic-sell behavior and the capacity/tolerance gap.",
+      "priority": "high",
+      "owner": "Risk Profiler"
+    },
+    {
+      "id": "REC-05",
+      "title": "Open a second 529 and boost college funding",
+      "detail": "Open a 529 for the younger child immediately and consider superfunding (5-year gift election, up to ~$70K split across both donors); boost the elder child's 529 to $18–20K/yr. Bridge the residual from taxable/RSU proceeds — and do NOT sacrifice retirement contributions to fully fund private college; merit aid, loans and public-university options remain levers.",
+      "priority": "high",
+      "owner": "Goals & Wellbeing Planner & Tax & Estate Specialist"
+    },
+    {
+      "id": "REC-06",
+      "title": "Maximize tax-advantaged savings and raise the savings rate",
+      "detail": "Max both 401(k)s ($23.5K each), add dual backdoor Roth ($7K each, income too high for direct), use the mega-backdoor Roth if Anand's plan allows, and max an HSA if available. Target lifting total savings toward $90–105K/yr — the single biggest lever on the retirement gap.",
+      "priority": "high",
+      "owner": "Tax & Estate Specialist"
+    },
+    {
+      "id": "REC-07",
+      "title": "Close the insurance gap: disability + umbrella liability",
+      "detail": "Two professional incomes ($260K + $160K) underpin the entire plan. Secure own-occupation long-term disability coverage for BOTH earners to replace income to age 65, and add an umbrella liability policy (\u2265$2–3M) given the $1.4M home and growing taxable assets. Retain ~$2M term life on each earner.",
+      "priority": "high",
+      "owner": "Tax & Estate Specialist"
+    },
+    {
+      "id": "REC-08",
+      "title": "Optimize asset location",
+      "detail": "Hold bonds and REITs in the 401(k)s, highest-growth assets in the Roth IRAs, and broad equity index in taxable. For this high CA bracket, favor California municipal bonds in taxable accounts for a higher after-tax yield.",
+      "priority": "medium",
+      "owner": "Tax & Estate Specialist"
+    },
+    {
+      "id": "REC-09",
+      "title": "Establish core estate documents",
+      "detail": "Set up a revocable living trust to avoid California probate on the $1.4M home, update wills, name guardians for the minors, execute durable powers of attorney and healthcare directives, and review all beneficiary designations (401(k)s, Roth, life insurance) for contingent beneficiaries.",
+      "priority": "medium",
+      "owner": "Tax & Estate Specialist"
+    },
+    {
+      "id": "REC-10",
+      "title": "Position bonds short-to-intermediate; begin glidepath in 2033",
+      "detail": "Hold 2–5yr Treasuries and TIPS now and avoid extending duration into elevated rate-hike risk; glide bond weight up 1–2 ppts/yr from 2033 as retirement and college approach, de-risking the college buckets on separate timers.",
+      "priority": "medium",
+      "owner": "Market Strategist"
+    },
+    {
+      "id": "REC-11",
+      "title": "Fund the vacation-home down payment via a laddered, capital-stable vehicle",
+      "detail": "Earmark the $125K cash into an 8-year CD/HYSA ladder and add ~$3K/yr to fully fund the ~$200K target (already ~89% funded). This separates the goal from market risk and removes cash drag from the growth portfolio.",
+      "priority": "low",
+      "owner": "Goals & Wellbeing Planner"
+    }
+  ],
+  "compliance": {
+    "verdict": "APPROVED",
+    "reviewer": "Compliance / Suitability Reviewer",
+    "notes": [
+      "Band anchoring is correct: anchored to the lower tolerance score (54 → Moderate Growth) despite capacity 78, given the documented panic-sell/loss-aversion history — the best-interest call.",
+      "RSU exit properly framed: 10b5-1, newest-vested-first, specific-lot ID, TLH, charitable gifting, explicit 'do not market-time' — textbook non-timed and tax-aware.",
+      "Goals disclosed honestly: 'not on track,' explicit gaps, 0%/13% college funding, refusal to sacrifice retirement for private college — no overpromising.",
+      "Projections shown as Low/Mid/High scenario bands with probability-of-success ranges and an explicit 'illustrative ranges, not guarantees' caveat — false-precision concern resolved.",
+      "Human-capital concentration disclosed: salary and the 34% employer stock share one employer (correlated downside), framed independently of the stock's outlook.",
+      "Insurance gap addressed: own-occupation LTD for both earners and umbrella \u2265$2–3M added; term life retained.",
+      "RSU mechanics addressed: insider/blackout and 10b5-1 feasibility check, ordinary-income + capital-gains treatment, estimated-tax/withholding and AMT review noted.",
+      "No excess risk, no concentration push, no high-fee/illiquid product, no misrepresentation. Consistent with the Reg BI best-interest standard. APPROVED to send."
+    ]
+  },
+  "disclaimers": "Prepared for the Sharma Household for educational and illustrative purposes only; this is a synthetic demo with fictional persons and figures and is not individualized investment, tax, or legal advice. Projections are scenario-based estimates, not forecasts or guarantees; actual results will vary with markets, contributions, taxes, and personal circumstances. Implementation should be confirmed with the client's CPA and estate attorney, and any employer-stock sales coordinated with the company's insider-trading policy and a qualified tax professional. Investing involves risk, including loss of principal."
+}
