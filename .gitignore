@@ -1,18 +1,13 @@
-# Secrets — NEVER commit (the test ANTHROPIC_API_KEY lives here)
+# Secrets — NEVER commit (the ANTHROPIC_API_KEY lives here)
 .env
 .env.*
 !.env.sample
 !.env.example
 
-# Managed-agents session state (local, per-machine)
-.environment_id
-.coordinator_id
-.specialist_ids.json
-.skill_ids.json
-.last_session_id
-
-# Generated deliverables
-outputs/
+# NOTE: session state (.coordinator_id, .specialist_ids.json, .skill_ids.json,
+# .environment_id, .last_session_id) and outputs/ are intentionally COMMITTED for
+# the demo so the partner can show the real deliverables and open the live session.
+# These are resource IDs, NOT credentials. The API key stays only in .env (above).
 
 # Python
 __pycache__/
