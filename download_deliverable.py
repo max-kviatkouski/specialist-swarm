@@ -56,8 +56,8 @@ def main() -> None:
 
     if count == 0:
         print("\nNo files found on that session.")
-        print("Check the session in the Console:")
-        print(f"  https://platform.claude.com/sessions/{session_id}")
+        print("Inspect the session's agent threads with:")
+        print(f"  python show_session.py {session_id}")
     else:
         print(f"\nDownloaded {count} file(s) to {OUTPUT_DIR}/")
 

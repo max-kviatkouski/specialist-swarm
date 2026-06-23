@@ -137,8 +137,9 @@ def main() -> None:
         client.beta.files.download(f.id).write_to_file(str(out_path))
 
     if not files:
-        print("  (no files found — check the session in the console)")
-    print(f"\nView the full session at:\n  https://platform.claude.com/sessions/{session.id}")
+        print("  (no files found yet — they can lag a few seconds)")
+    print(f"\nSession id: {session.id}")
+    print(f"Inspect every agent thread with:\n  python show_session.py {session.id}")
 
 
 if __name__ == "__main__":
