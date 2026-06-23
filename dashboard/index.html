@@ -1,0 +1,797 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI Wealth Advisory — Case Console</title>
+  <!-- Vendored locally so the dashboard works fully OFFLINE (just double-click index.html). -->
+  <script src="vendor/tailwind.js"></script>
+  <script src="vendor/chart.umd.min.js"></script>
+  <script src="cases.js"></script>
+  <style>
+    /* Smooth sidebar selection */
+    .case-row { transition: background 0.15s; }
+    .case-row.active { background: #1e3a5f; }
+    /* Tab active state */
+    .tab-btn.active { border-bottom: 3px solid #10b981; color: #10b981; }
+    /* STOP banner pulse */
+    @keyframes stop-pulse { 0%,100%{opacity:1} 50%{opacity:.85} }
+    .stop-pulse { animation: stop-pulse 2s ease-in-out infinite; }
+    /* Chart canvas containers */
+    .chart-wrap { position: relative; }
+    /* Gauge center overlay */
+    .gauge-center {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -20%);
+      text-align: center; pointer-events: none;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     TOP BAR
+═══════════════════════════════════════════════════════════════ -->
+<header class="bg-navy-900 bg-slate-900 text-white px-6 py-3 flex items-center justify-between shadow z-20 sticky top-0">
+  <div class="flex items-center gap-3">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M12 2a10 10 0 100 20A10 10 0 0012 2zm0 0v4m0 14v-4m-7-7H2m20 0h-3M5.64 5.64l2.12 2.12m8.48 8.48 2.12 2.12M5.64 18.36l2.12-2.12m8.48-8.48 2.12-2.12" />
+    </svg>
+    <span class="text-lg font-bold tracking-wide">AI Wealth Advisory</span>
+    <span class="text-slate-400 font-light">— Case Console</span>
+  </div>
+  <div class="text-xs bg-amber-500 text-amber-950 font-semibold px-3 py-1 rounded-full">
+    DEMO / synthetic data — not financial advice
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     MAIN LAYOUT: sidebar + content
+═══════════════════════════════════════════════════════════════ -->
+<div class="flex min-h-screen">
+
+  <!-- SIDEBAR -->
+  <aside class="w-72 bg-slate-800 text-slate-100 flex-shrink-0 overflow-y-auto" style="min-height:calc(100vh - 52px)">
+    <div class="px-4 py-3 text-xs uppercase tracking-widest text-slate-400 font-semibold border-b border-slate-700">
+      Cases
+    </div>
+    <div id="sidebar-cases" class="divide-y divide-slate-700"></div>
+  </aside>
+
+  <!-- MAIN PANEL -->
+  <main class="flex-1 overflow-y-auto" style="min-height:calc(100vh - 52px)">
+    <div id="main-panel" class="p-6"></div>
+  </main>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     JAVASCRIPT — rendering engine
+═══════════════════════════════════════════════════════════════ -->
+<script>
+// ─── helpers ──────────────────────────────────────────────────────────────────
+const fmtDollar = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+const fmt$ = n => fmtDollar.format(n);
+
+const COLOR = {
+  approved: { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-600', hex: '#16a34a' },
+  revise:   { bg: 'bg-amber-100', text: 'text-amber-800', border: 'border-amber-600', hex: '#d97706' },
+  stop:     { bg: 'bg-red-100',   text: 'text-red-800',   border: 'border-red-700',   hex: '#dc2626' }
+};
+
+function verdictColor(v) {
+  if (v === 'APPROVED') return COLOR.approved;
+  if (v === 'REVISE')   return COLOR.revise;
+  return COLOR.stop;
+}
+
+function priorityColor(p) {
+  if (p === 'high')   return { dot: '#dc2626', badge: 'bg-red-100 text-red-700' };
+  if (p === 'medium') return { dot: '#d97706', badge: 'bg-amber-100 text-amber-700' };
+  return { dot: '#16a34a', badge: 'bg-green-100 text-green-700' };
+}
+
+const ASSET_COLOR_MAP = {
+  'US Equity':                   '#2563eb',
+  'Employer Stock (concentrated)':'#dc2626',
+  'International Equity':         '#0ea5e9',
+  'Bonds':                        '#16a34a',
+  'Cash':                         '#eab308',
+  'Cash / CDs':                   '#f59e0b',
+  'Alternatives / Other':         '#8b5cf6',
+  '401k / Target Date':           '#64748b',
+};
+
+const FALLBACK_COLORS = ['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6','#f97316'];
+function assetColor(name, idx) {
+  return ASSET_COLOR_MAP[name] || FALLBACK_COLORS[idx % FALLBACK_COLORS.length];
+}
+
+// ─── chart registry (for destroy on re-render) ────────────────────────────────
+let CHARTS = [];
+function destroyAllCharts() {
+  CHARTS.forEach(c => { try { c.destroy(); } catch(e){} });
+  CHARTS = [];
+}
+
+// ─── current case ─────────────────────────────────────────────────────────────
+let currentId = null;
+
+// ─── build sidebar ────────────────────────────────────────────────────────────
+function buildSidebar() {
+  const el = document.getElementById('sidebar-cases');
+  el.innerHTML = '';
+  (window.CASES || []).forEach(c => {
+    const vc = verdictColor(c.compliance.verdict);
+    const row = document.createElement('div');
+    row.className = 'case-row px-4 py-3 cursor-pointer hover:bg-slate-700 transition-colors';
+    row.dataset.id = c.id;
+
+    const vLabel = c.compliance.verdict;
+    const vClass = c.compliance.verdict === 'APPROVED'
+      ? 'bg-green-600 text-white'
+      : c.compliance.verdict === 'REVISE'
+      ? 'bg-amber-500 text-white'
+      : 'bg-red-600 text-white';
+
+    const ttBadge = 'bg-slate-600 text-slate-200 text-xs px-1.5 py-0.5 rounded';
+
+    row.innerHTML = `
+      <div class="flex items-start justify-between gap-2">
+        <div class="min-w-0">
+          <div class="font-semibold text-sm text-white truncate">${c.generatedFor}</div>
+          <div class="flex flex-wrap gap-1 mt-1">
+            <span class="${ttBadge}">${c.ticketType.replace(/_/g,' ')}</span>
+          </div>
+        </div>
+        <div class="flex-shrink-0 flex flex-col items-end gap-1">
+          <span class="text-xs font-bold ${vClass} px-2 py-0.5 rounded-full">${vLabel}</span>
+          <span class="text-xs text-slate-300">Score: <b class="text-white">${c.financialWellbeing.score}</b></span>
+        </div>
+      </div>
+    `;
+    row.addEventListener('click', () => selectCase(c.id));
+    el.appendChild(row);
+  });
+}
+
+function selectCase(id) {
+  currentId = id;
+  // Update sidebar active state
+  document.querySelectorAll('.case-row').forEach(r => {
+    r.classList.toggle('active', r.dataset.id === id);
+  });
+  const caseObj = (window.CASES || []).find(c => c.id === id);
+  if (caseObj) renderCase(caseObj);
+}
+
+// ─── tab management ───────────────────────────────────────────────────────────
+let activeTab = 'client';
+function switchTab(tab, plan) {
+  activeTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.getElementById('tab-client').classList.toggle('hidden', tab !== 'client');
+  document.getElementById('tab-advisor').classList.toggle('hidden', tab !== 'advisor');
+  if (tab === 'client') renderClientCharts(plan);
+}
+
+// ─── MAIN RENDER ──────────────────────────────────────────────────────────────
+function renderCase(plan) {
+  destroyAllCharts();
+  const panel = document.getElementById('main-panel');
+  const vc = verdictColor(plan.compliance.verdict);
+
+  const stopDim = plan.compliance.verdict === 'STOP'
+    ? 'opacity-50 pointer-events-none line-through'
+    : '';
+
+  panel.innerHTML = `
+    <!-- COMPLIANCE BANNER -->
+    ${renderBanner(plan)}
+
+    <!-- HEADER -->
+    <div class="mt-4 mb-4">
+      <h1 class="text-2xl font-bold text-slate-900">${plan.generatedFor}</h1>
+      <div class="text-sm text-slate-500 mt-1">${plan.ticketType.replace(/_/g,' ')} · prepared by ${plan.advisor} · as of ${plan.asOf}</div>
+      <div class="mt-3 flex flex-wrap items-center gap-2">
+        ${(plan.routedSpecialists||[]).map(s => `<span class="bg-slate-200 text-slate-700 text-xs font-medium px-2.5 py-1 rounded-full">${s}</span>`).join('')}
+        <span class="text-xs text-slate-400 ml-1">${plan.routedSpecialists.length} specialist${plan.routedSpecialists.length !== 1 ? 's' : ''} engaged</span>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="border-b border-slate-200 mb-6 flex gap-0">
+      <button data-tab="client" class="tab-btn px-5 py-2.5 text-sm font-semibold text-slate-500 hover:text-emerald-600 border-b-3 border-transparent transition-colors active">Client View</button>
+      <button data-tab="advisor" class="tab-btn px-5 py-2.5 text-sm font-semibold text-slate-500 hover:text-emerald-600 border-b-3 border-transparent transition-colors">Advisor / Internal</button>
+    </div>
+
+    <!-- TAB CONTENTS -->
+    <div id="tab-client">${renderClientView(plan, stopDim)}</div>
+    <div id="tab-advisor" class="hidden">${renderAdvisorView(plan)}</div>
+
+    <!-- DISCLAIMERS -->
+    <div class="mt-10 pt-4 border-t border-slate-200 text-xs text-slate-400 leading-relaxed">${plan.disclaimers}</div>
+  `;
+
+  // Wire tab buttons
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab, plan));
+  });
+
+  // Render client charts (default tab)
+  renderClientCharts(plan);
+}
+
+// ─── COMPLIANCE BANNER ────────────────────────────────────────────────────────
+function renderBanner(plan) {
+  const v = plan.compliance.verdict;
+  const vc = verdictColor(v);
+
+  const headline = v === 'APPROVED'
+    ? 'COMPLIANCE: APPROVED — plan is suitable and may be presented to the client.'
+    : v === 'REVISE'
+    ? 'COMPLIANCE: REVISE — changes required before this plan can be presented.'
+    : 'COMPLIANCE: STOP — recommendation is unsuitable and will NOT be presented.';
+
+  const extraClass = v === 'STOP' ? 'stop-pulse' : '';
+
+  return `
+    <div class="${vc.bg} ${vc.text} border-l-4 ${vc.border} rounded-lg px-5 py-4 ${extraClass}">
+      <div class="flex items-start gap-3">
+        <div class="mt-0.5 flex-shrink-0">
+          ${v === 'APPROVED'
+            ? `<svg class="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`
+            : v === 'REVISE'
+            ? `<svg class="h-5 w-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M12 2a10 10 0 100 20A10 10 0 0012 2z"/></svg>`
+            : `<svg class="h-5 w-5 text-red-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>`
+          }
+        </div>
+        <div class="flex-1">
+          <p class="font-bold text-sm">${headline}</p>
+          <ul class="mt-2 space-y-0.5 text-xs list-disc list-inside opacity-90">
+            ${(plan.compliance.notes||[]).map(n => `<li>${n}</li>`).join('')}
+          </ul>
+          <p class="mt-2 text-xs opacity-70">Reviewed by: ${plan.compliance.reviewer}</p>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ─── CLIENT VIEW ──────────────────────────────────────────────────────────────
+function renderClientView(plan, stopDim) {
+  const stopRecsClass = plan.compliance.verdict === 'STOP' ? 'opacity-50' : '';
+
+  return `
+    <!-- Executive Summary -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 mb-5">
+      <h2 class="text-base font-bold text-slate-700 mb-3 flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>Executive Summary
+      </h2>
+      <ul class="space-y-2">
+        ${(plan.executiveSummary||[]).map(s => `
+          <li class="flex gap-2 text-sm text-slate-700">
+            <span class="text-emerald-500 font-bold mt-0.5 flex-shrink-0">•</span>
+            <span>${s}</span>
+          </li>`).join('')}
+      </ul>
+    </div>
+
+    <!-- 2-col grid: Wellbeing + Risk -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+
+      <!-- Wellbeing Gauge -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
+        <h2 class="text-base font-bold text-slate-700 mb-3 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-blue-500 inline-block"></span>Financial Wellbeing
+        </h2>
+        <div class="chart-wrap" style="height:180px">
+          <canvas id="gaugeChart"></canvas>
+          <div class="gauge-center" id="gaugeCenter"></div>
+        </div>
+        <div class="mt-4 space-y-1">
+          ${(plan.financialWellbeing.drivers||[]).map(d => {
+            const isPos = d.startsWith('+');
+            const isNeg = d.startsWith('−') || d.startsWith('-');
+            const cls = isPos ? 'text-green-700 bg-green-50' : isNeg ? 'text-red-700 bg-red-50' : 'text-slate-600';
+            return `<div class="text-xs px-2 py-1 rounded ${cls}">${d}</div>`;
+          }).join('')}
+        </div>
+      </div>
+
+      <!-- Risk Profile -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
+        <h2 class="text-base font-bold text-slate-700 mb-3 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-indigo-500 inline-block"></span>Risk Profile
+        </h2>
+        <div class="chart-wrap" style="height:120px">
+          <canvas id="riskChart"></canvas>
+        </div>
+        <div class="mt-3 flex items-center gap-2">
+          <span class="text-xs font-semibold px-3 py-1 rounded-full ${bandClass(plan.riskProfile.band)}">${plan.riskProfile.band}</span>
+          <span class="text-xs text-slate-500">We anchor to the <strong>lower</strong> of the two scores.</span>
+        </div>
+        <p class="mt-2 text-xs text-slate-600 leading-relaxed">${plan.riskProfile.rationale}</p>
+      </div>
+    </div>
+
+    <!-- Allocation: Current vs Target -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 mb-5">
+      <h2 class="text-base font-bold text-slate-700 mb-4 flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-sky-500 inline-block"></span>Asset Allocation: Current vs Target
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <p class="text-xs font-semibold text-center text-slate-500 mb-2 uppercase tracking-wide">Current</p>
+          <div class="chart-wrap" style="height:200px"><canvas id="allocCurrentChart"></canvas></div>
+        </div>
+        <div>
+          <p class="text-xs font-semibold text-center text-slate-500 mb-2 uppercase tracking-wide">Target</p>
+          <div class="chart-wrap" style="height:200px"><canvas id="allocTargetChart"></canvas></div>
+        </div>
+      </div>
+      <div class="mt-4 space-y-1">
+        <p class="text-xs font-semibold text-slate-600 mb-1">Key Changes</p>
+        ${(plan.allocation.keyChanges||[]).map(k => `
+          <div class="flex gap-2 text-xs text-slate-600">
+            <span class="text-sky-500 font-bold flex-shrink-0 mt-0.5">→</span>
+            <span>${k}</span>
+          </div>`).join('')}
+      </div>
+    </div>
+
+    <!-- Goals (full width) -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 mb-5">
+      <h2 class="text-base font-bold text-slate-700 mb-4 flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>Goal Funding
+      </h2>
+      <div class="chart-wrap mb-4" style="height:${Math.max(80, (plan.goals||[]).length * 50)}px">
+        <canvas id="goalsChart"></canvas>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+        ${(plan.goals||[]).map(g => {
+          const cls = g.onTrack ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50';
+          const badge = g.onTrack ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
+          return `
+            <div class="rounded-lg border ${cls} p-3">
+              <div class="flex justify-between items-start gap-2">
+                <span class="text-sm font-semibold text-slate-800">${g.name}</span>
+                <span class="text-xs px-2 py-0.5 rounded-full font-medium ${badge} flex-shrink-0">${g.onTrack ? 'On Track' : 'Off Track'}</span>
+              </div>
+              <div class="text-xs text-slate-500 mt-1">${fmt$(g.targetAmount)} by ${g.targetYear} · <strong>${g.fundedPercent}%</strong> funded</div>
+              ${g.gap ? `<div class="text-xs text-slate-600 mt-1 italic">${g.gap}</div>` : ''}
+              ${g.recommendation ? `<div class="text-xs text-slate-700 mt-1"><span class="font-medium">Rec:</span> ${g.recommendation}</div>` : ''}
+            </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <!-- Projection Cone (full width) -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 mb-5">
+      <h2 class="text-base font-bold text-slate-700 mb-4 flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-blue-400 inline-block"></span>Portfolio Projection Cone
+      </h2>
+      <div class="chart-wrap" style="height:280px"><canvas id="projectionChart"></canvas></div>
+      <p class="mt-3 text-xs text-slate-500 italic leading-relaxed">${plan.projections.assumptions}</p>
+    </div>
+
+    <!-- Market Context -->
+    ${renderMarketContext(plan)}
+
+    <!-- Recommendations -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 mb-5 ${stopRecsClass}">
+      <h2 class="text-base font-bold text-slate-700 mb-4 flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-violet-500 inline-block"></span>Recommendations
+        ${plan.compliance.verdict === 'STOP' ? '<span class="ml-2 text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">Withheld — see STOP</span>' : ''}
+      </h2>
+      <div class="space-y-3">
+        ${([...plan.recommendations||[]].sort((a,b) => {
+          const o = {high:0, medium:1, low:2};
+          return (o[a.priority]||9) - (o[b.priority]||9);
+        })).map(r => {
+          const pc = priorityColor(r.priority);
+          return `
+            <div id="rec-${r.id}" class="flex gap-3 p-3 rounded-lg bg-slate-50 border border-slate-100">
+              <div class="flex-shrink-0 mt-1.5 w-2.5 h-2.5 rounded-full" style="background:${pc.dot}"></div>
+              <div class="flex-1 min-w-0">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="text-sm font-semibold text-slate-800">${r.title}</span>
+                  <span class="text-xs px-2 py-0.5 rounded-full font-medium ${pc.badge}">${r.priority}</span>
+                  ${r.owner ? `<span class="text-xs text-slate-400">${r.owner}</span>` : ''}
+                </div>
+                <p class="text-xs text-slate-600 mt-1 leading-relaxed">${r.detail}</p>
+              </div>
+            </div>`;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function bandClass(band) {
+  const map = {
+    'Conservative':    'bg-green-100 text-green-800',
+    'Moderate':        'bg-teal-100 text-teal-800',
+    'Moderate Growth': 'bg-blue-100 text-blue-800',
+    'Growth':          'bg-indigo-100 text-indigo-800',
+    'Aggressive':      'bg-red-100 text-red-700',
+  };
+  return map[band] || 'bg-slate-100 text-slate-700';
+}
+
+function renderMarketContext(plan) {
+  const mc = plan.marketContext;
+  if (!mc || !mc.summary) return '';
+  return `
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 mb-5">
+      <h2 class="text-base font-bold text-slate-700 mb-3 flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-orange-400 inline-block"></span>Market Context
+        <span class="text-xs text-slate-400 ml-1">as of ${mc.asOf}</span>
+      </h2>
+      <p class="text-sm text-slate-700 leading-relaxed mb-3">${mc.summary}</p>
+      ${(mc.tacticalTilts||[]).length > 0 ? `
+        <div class="mb-3">
+          <p class="text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Tactical Tilts</p>
+          <ul class="space-y-1">
+            ${mc.tacticalTilts.map(t => `<li class="text-xs text-slate-600 flex gap-1.5"><span class="text-orange-500 font-bold">›</span><span>${t}</span></li>`).join('')}
+          </ul>
+        </div>` : ''}
+      ${(mc.sources||[]).filter(s => s.startsWith('http')).length > 0 ? `
+        <div>
+          <p class="text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Sources (live from Market Strategist)</p>
+          <div class="flex flex-wrap gap-2">
+            ${mc.sources.filter(s => s.startsWith('http')).map(s => `<a href="${s}" target="_blank" rel="noopener" class="text-xs text-blue-600 underline hover:text-blue-800 break-all">${s}</a>`).join('')}
+          </div>
+        </div>` : ''}
+    </div>
+  `;
+}
+
+// ─── ADVISOR / INTERNAL VIEW ──────────────────────────────────────────────────
+function renderAdvisorView(plan) {
+  const internal = plan.internal || {};
+  return `
+    <div class="mb-4 flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold px-4 py-2 rounded-lg">
+      <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+      INTERNAL — Employee Only. Do not share with client.
+    </div>
+
+    <!-- Specialist Dialog -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 mb-5">
+      <h2 class="text-base font-bold text-slate-700 mb-4 flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-indigo-500 inline-block"></span>Specialist Dialog
+      </h2>
+      <div class="space-y-3">
+        ${(internal.dialog||[]).map((d, i) => `
+          <div class="flex gap-3 p-4 rounded-lg bg-slate-50 border border-slate-100">
+            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold">${(d.specialist||'?')[0].toUpperCase()}</div>
+            <div class="flex-1 min-w-0">
+              <div class="flex flex-wrap items-baseline gap-2 mb-1">
+                <span class="text-sm font-bold text-slate-800">${d.specialist}</span>
+                <span class="text-xs text-slate-400 italic">${d.role}</span>
+              </div>
+              <p class="text-sm text-slate-700 leading-relaxed">${d.message}</p>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>
+
+    <!-- Risk Flags -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 mb-5">
+      <h2 class="text-base font-bold text-slate-700 mb-4 flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-red-500 inline-block"></span>Internal Risk Flags
+      </h2>
+      <div class="space-y-3">
+        ${(internal.riskFlags||[]).map(f => {
+          const sc = f.severity === 'high' ? 'border-red-200 bg-red-50'
+            : f.severity === 'medium' ? 'border-amber-200 bg-amber-50'
+            : 'border-green-200 bg-green-50';
+          const bc = f.severity === 'high' ? 'bg-red-600 text-white'
+            : f.severity === 'medium' ? 'bg-amber-500 text-white'
+            : 'bg-green-600 text-white';
+          return `
+            <div class="flex gap-3 p-3 rounded-lg border ${sc}">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="text-sm font-semibold text-slate-800">${f.label}</span>
+                  <span class="text-xs font-medium px-2 py-0.5 rounded-full ${bc}">${f.severity}</span>
+                </div>
+                <p class="text-xs text-slate-700 leading-relaxed">${f.detail}</p>
+              </div>
+            </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <!-- Suitability / Compliance Notes -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 mb-5">
+      <h2 class="text-base font-bold text-slate-700 mb-4 flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full ${plan.compliance.verdict === 'STOP' ? 'bg-red-500' : 'bg-green-500'} inline-block"></span>Suitability / Compliance
+      </h2>
+      <div class="mb-3 text-xs text-slate-500">Reviewed by: <strong class="text-slate-700">${plan.compliance.reviewer}</strong></div>
+      <div class="mb-4">
+        <div class="font-semibold text-sm text-slate-700 mb-2">Compliance Notes</div>
+        <ul class="space-y-1">
+          ${(plan.compliance.notes||[]).map(n => `<li class="text-xs text-slate-600 flex gap-1.5"><span class="text-slate-400 flex-shrink-0">•</span><span>${n}</span></li>`).join('')}
+        </ul>
+      </div>
+      ${internal.complianceReasoning ? `
+        <div>
+          <div class="font-semibold text-sm text-slate-700 mb-1">Compliance Reasoning (Internal)</div>
+          <p class="text-xs text-slate-600 leading-relaxed bg-slate-50 rounded-lg border border-slate-100 p-3">${internal.complianceReasoning}</p>
+        </div>` : ''}
+    </div>
+
+    <!-- Talking Points -->
+    ${(internal.talkingPoints||[]).length > 0 ? `
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 mb-5">
+      <h2 class="text-base font-bold text-slate-700 mb-4 flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>Advisor Talking Points
+      </h2>
+      <ol class="space-y-2">
+        ${internal.talkingPoints.map((t, i) => `
+          <li class="flex gap-2.5 text-sm text-slate-700">
+            <span class="flex-shrink-0 w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold flex items-center justify-center">${i+1}</span>
+            <span>${t}</span>
+          </li>`).join('')}
+      </ol>
+    </div>` : ''}
+  `;
+}
+
+// ─── CHART RENDERERS ──────────────────────────────────────────────────────────
+function renderClientCharts(plan) {
+  // Gauge
+  renderGauge(plan);
+  // Risk profile bars
+  renderRiskBars(plan);
+  // Allocation donuts
+  renderAllocDonuts(plan);
+  // Goal bars
+  renderGoalBars(plan);
+  // Projection cone
+  renderProjection(plan);
+}
+
+function renderGauge(plan) {
+  const ctx = document.getElementById('gaugeChart');
+  if (!ctx) return;
+  const score = plan.financialWellbeing.score;
+  const color = score >= 70 ? '#16a34a' : score >= 40 ? '#d97706' : '#dc2626';
+  const c = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      datasets: [{
+        data: [score, 100 - score],
+        backgroundColor: [color, '#e2e8f0'],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      circumference: 180,
+      rotation: 270,
+      cutout: '75%',
+      plugins: { tooltip: { enabled: false }, legend: { display: false } },
+      animation: { duration: 600 }
+    }
+  });
+  CHARTS.push(c);
+
+  const center = document.getElementById('gaugeCenter');
+  if (center) {
+    center.innerHTML = `
+      <div class="font-extrabold text-2xl text-slate-800" style="line-height:1">${score}</div>
+      <div class="text-xs text-slate-500 mt-1 max-w-24 leading-tight">${plan.financialWellbeing.band}</div>
+    `;
+  }
+}
+
+function renderRiskBars(plan) {
+  const ctx = document.getElementById('riskChart');
+  if (!ctx) return;
+  const c = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Capacity (ability)', 'Tolerance (willingness)'],
+      datasets: [{
+        data: [plan.riskProfile.capacityScore, plan.riskProfile.toleranceScore],
+        backgroundColor: ['#2563eb', '#64748b'],
+        borderRadius: 4
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { min: 0, max: 100, grid: { color: '#f1f5f9' } },
+        y: { grid: { display: false } }
+      },
+      plugins: { legend: { display: false }, tooltip: { callbacks: {
+        label: ctx => ` Score: ${ctx.raw}/100`
+      }}}
+    }
+  });
+  CHARTS.push(c);
+}
+
+function renderAllocDonuts(plan) {
+  const currentAlloc = plan.allocation.current || [];
+  const targetAlloc = plan.allocation.target || [];
+
+  // Build shared color map
+  const allClasses = new Set([
+    ...currentAlloc.map(a => a.assetClass),
+    ...targetAlloc.map(a => a.assetClass)
+  ]);
+  const colorMap = {};
+  let fi = 0;
+  allClasses.forEach(cls => { colorMap[cls] = assetColor(cls, fi++); });
+
+  // Sanity check
+  const curSum = currentAlloc.reduce((s, a) => s + a.percent, 0);
+  const tgtSum = targetAlloc.reduce((s, a) => s + a.percent, 0);
+  if (Math.abs(curSum - 100) > 1) console.warn(`Alloc current sum = ${curSum}`);
+  if (Math.abs(tgtSum - 100) > 1) console.warn(`Alloc target sum = ${tgtSum}`);
+
+  const donutOpts = (items, id, showValue) => {
+    const ctx = document.getElementById(id);
+    if (!ctx) return;
+    const labels = items.map(a => a.assetClass);
+    const data = items.map(a => a.percent);
+    const colors = items.map(a => colorMap[a.assetClass]);
+    const c = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels,
+        datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor: '#fff' }]
+      },
+      options: {
+        cutout: '55%',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 10, padding: 8 } },
+          tooltip: { callbacks: {
+            label: ctx => {
+              const item = items[ctx.dataIndex];
+              let s = ` ${ctx.label}: ${ctx.raw}%`;
+              if (showValue && item && item.value) s += ` (${fmt$(item.value)})`;
+              return s;
+            }
+          }}
+        }
+      }
+    });
+    CHARTS.push(c);
+  };
+
+  donutOpts(currentAlloc, 'allocCurrentChart', true);
+  donutOpts(targetAlloc, 'allocTargetChart', false);
+}
+
+function renderGoalBars(plan) {
+  const ctx = document.getElementById('goalsChart');
+  if (!ctx) return;
+  const goals = plan.goals || [];
+  const green = '#16a34a', red = '#dc2626';
+  const c = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: goals.map(g => g.name),
+      datasets: [{
+        data: goals.map(g => g.fundedPercent),
+        backgroundColor: goals.map(g => g.onTrack ? green : red),
+        borderRadius: 4
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { min: 0, max: 100, ticks: { callback: v => v + '%' }, grid: { color: '#f1f5f9' } },
+        y: { grid: { display: false }, ticks: { font: { size: 11 } } }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: {
+          label: ctx => {
+            const g = goals[ctx.dataIndex];
+            return ` ${g.fundedPercent}% funded · target ${fmt$(g.targetAmount)} by ${g.targetYear}`;
+          }
+        }}
+      }
+    }
+  });
+  CHARTS.push(c);
+}
+
+function renderProjection(plan) {
+  const ctx = document.getElementById('projectionChart');
+  if (!ctx) return;
+  const series = plan.projections.series || [];
+
+  // Dev guard: cone ordering
+  series.forEach((pt, i) => {
+    if (pt.low > pt.mid || pt.mid > pt.high) {
+      console.warn(`Projection cone ordering violation at #${i} (year ${pt.year}): ${pt.low}/${pt.mid}/${pt.high}`);
+    }
+  });
+
+  const labels = series.map(pt => `${pt.year} (age ${pt.age})`);
+  const c = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'High',
+          data: series.map(p => p.high),
+          borderColor: '#93c5fd',
+          borderWidth: 1.5,
+          borderDash: [4, 4],
+          pointRadius: 0,
+          fill: '+2',
+          backgroundColor: 'rgba(59,130,246,0.10)',
+          tension: 0.35
+        },
+        {
+          label: 'Mid',
+          data: series.map(p => p.mid),
+          borderColor: '#2563eb',
+          borderWidth: 3,
+          pointRadius: 3,
+          pointBackgroundColor: '#2563eb',
+          fill: false,
+          tension: 0.35
+        },
+        {
+          label: 'Low',
+          data: series.map(p => p.low),
+          borderColor: '#93c5fd',
+          borderWidth: 1.5,
+          borderDash: [4, 4],
+          pointRadius: 0,
+          fill: false,
+          tension: 0.35
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        y: {
+          ticks: { callback: v => fmt$(v), font: { size: 10 } },
+          grid: { color: '#f1f5f9' }
+        },
+        x: { ticks: { font: { size: 10 } }, grid: { display: false } }
+      },
+      plugins: {
+        legend: { position: 'top', labels: { font: { size: 11 }, boxWidth: 14 } },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}: ${fmt$(ctx.raw)}`
+          }
+        }
+      }
+    }
+  });
+  CHARTS.push(c);
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+(function init() {
+  if (!window.CASES || !window.CASES.length) {
+    document.getElementById('main-panel').innerHTML =
+      '<div class="p-10 text-red-600">Error: window.CASES not loaded. Ensure cases.js is in the same directory.</div>';
+    return;
+  }
+  buildSidebar();
+  selectCase(window.CASES[0].id);
+})();
+</script>
+</body>
+</html>
