@@ -1,0 +1,22 @@
+# Secrets — NEVER commit (the test ANTHROPIC_API_KEY lives here)
+.env
+.env.*
+!.env.sample
+!.env.example
+
+# Managed-agents session state (local, per-machine)
+.environment_id
+.coordinator_id
+.specialist_ids.json
+.skill_ids.json
+.last_session_id
+
+# Generated deliverables
+outputs/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/

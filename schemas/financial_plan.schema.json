@@ -1,0 +1,150 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "financial_plan.schema.json",
+  "title": "Personalized Financial Plan",
+  "description": "The data contract emitted by the Wealth Advisory swarm coordinator. The HTML dashboard renderer, the pptx/docx deliverable, AND the eval harness all consume this single object. The coordinator writes it to the session container as financial_plan.json.",
+  "type": "object",
+  "required": [
+    "generatedFor", "asOf", "advisor", "ticketType", "routedSpecialists",
+    "executiveSummary", "financialWellbeing", "riskProfile", "allocation",
+    "goals", "marketContext", "projections", "recommendations", "compliance", "disclaimers"
+  ],
+  "properties": {
+    "generatedFor": { "type": "string", "description": "Client household name" },
+    "asOf": { "type": "string", "description": "YYYY-MM-DD" },
+    "advisor": { "type": "string" },
+    "ticketType": {
+      "type": "string",
+      "enum": ["NEW_CLIENT_PLAN", "PORTFOLIO_REVIEW", "RETIREMENT_READINESS", "LIFE_EVENT"],
+      "description": "Classified by the router; drives which specialist subset is delegated to."
+    },
+    "routedSpecialists": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "The subset of specialists the router actually delegated to for THIS client — evidence of subset-selection (the board grows/shrinks per client)."
+    },
+    "executiveSummary": { "type": "array", "items": { "type": "string" }, "minItems": 3, "maxItems": 6 },
+    "financialWellbeing": {
+      "type": "object",
+      "required": ["score", "band", "drivers"],
+      "properties": {
+        "score": { "type": "number", "minimum": 0, "maximum": 100 },
+        "band": { "type": "string" },
+        "drivers": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "riskProfile": {
+      "type": "object",
+      "required": ["capacityScore", "toleranceScore", "band", "rationale"],
+      "properties": {
+        "capacityScore": { "type": "number", "minimum": 0, "maximum": 100, "description": "Ability to take risk (time horizon, income stability)." },
+        "toleranceScore": { "type": "number", "minimum": 0, "maximum": 100, "description": "Willingness to take risk (stated attitude)." },
+        "band": { "type": "string", "enum": ["Conservative", "Moderate", "Moderate Growth", "Growth", "Aggressive"] },
+        "rationale": { "type": "string" }
+      }
+    },
+    "allocation": {
+      "type": "object",
+      "required": ["current", "target", "keyChanges"],
+      "properties": {
+        "current": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["assetClass", "percent", "value"],
+            "properties": {
+              "assetClass": { "type": "string" },
+              "percent": { "type": "number", "minimum": 0, "maximum": 100 },
+              "value": { "type": "number", "minimum": 0 }
+            }
+          }
+        },
+        "target": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["assetClass", "percent"],
+            "properties": {
+              "assetClass": { "type": "string" },
+              "percent": { "type": "number", "minimum": 0, "maximum": 100 }
+            }
+          }
+        },
+        "keyChanges": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "goals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "targetYear", "targetAmount", "fundedPercent", "onTrack"],
+        "properties": {
+          "name": { "type": "string" },
+          "targetYear": { "type": "integer" },
+          "targetAmount": { "type": "number" },
+          "fundedPercent": { "type": "number", "minimum": 0, "maximum": 100 },
+          "onTrack": { "type": "boolean" },
+          "gap": { "type": "string" },
+          "recommendation": { "type": "string" }
+        }
+      }
+    },
+    "marketContext": {
+      "type": "object",
+      "required": ["summary", "asOf"],
+      "properties": {
+        "summary": { "type": "string" },
+        "asOf": { "type": "string" },
+        "sources": { "type": "array", "items": { "type": "string" }, "description": "URLs from the Market Strategist's live web_search." },
+        "tacticalTilts": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "projections": {
+      "type": "object",
+      "required": ["assumptions", "series"],
+      "properties": {
+        "assumptions": { "type": "string" },
+        "series": {
+          "type": "array",
+          "description": "Monte-Carlo-style cone. Renders as a line chart (low / mid / high).",
+          "items": {
+            "type": "object",
+            "required": ["year", "age", "low", "mid", "high"],
+            "properties": {
+              "year": { "type": "integer" },
+              "age": { "type": "integer" },
+              "low": { "type": "number" },
+              "mid": { "type": "number" },
+              "high": { "type": "number" }
+            }
+          }
+        }
+      }
+    },
+    "recommendations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "detail", "priority"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "detail": { "type": "string" },
+          "priority": { "type": "string", "enum": ["high", "medium", "low"] },
+          "owner": { "type": "string" }
+        }
+      }
+    },
+    "compliance": {
+      "type": "object",
+      "description": "The Compliance / Suitability Reviewer's verdict. STOP is the demo punchline — the swarm refuses to recommend an unsuitable plan.",
+      "required": ["verdict", "reviewer", "notes"],
+      "properties": {
+        "verdict": { "type": "string", "enum": ["APPROVED", "REVISE", "STOP"] },
+        "reviewer": { "type": "string" },
+        "notes": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "disclaimers": { "type": "string" }
+  }
+}

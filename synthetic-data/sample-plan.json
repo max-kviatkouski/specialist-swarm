@@ -1,0 +1,133 @@
+{
+  "generatedFor": "Anand & Priya Sharma",
+  "asOf": "2026-06-23",
+  "advisor": "Senior Wealth Advisor — AI Wealth Advisory Swarm",
+  "ticketType": "NEW_CLIENT_PLAN",
+  "routedSpecialists": [
+    "Portfolio Analyst",
+    "Risk Profiler",
+    "Market Strategist",
+    "Goals & Wellbeing Planner",
+    "Tax & Estate Specialist",
+    "Compliance Reviewer"
+  ],
+  "executiveSummary": [
+    "Strong savers with a healthy $1.25M base, but 34% of the portfolio sits in a single employer stock — the dominant risk to the whole plan.",
+    "Retirement at 60 is reachable but currently ~$1.1M short on the median path; closing the gap needs a higher pre-tax savings rate, not more risk.",
+    "$125K (10%) in cash is a drag; redeploying most of it and trimming the concentrated position funds both diversification and the college/vacation-home goals.",
+    "Recommended path keeps the household at a Moderate Growth risk band — suitable for their 14-year horizon and stated comfort level."
+  ],
+  "financialWellbeing": {
+    "score": 72,
+    "band": "On Track — with funding gaps",
+    "drivers": [
+      "+ High, stable dual income and a 24% savings rate",
+      "+ Fully funded 6-month emergency reserve",
+      "− Single-stock concentration (34%) and cash drag (10%)",
+      "− Retirement and college goals under-funded on the current path"
+    ]
+  },
+  "riskProfile": {
+    "capacityScore": 75,
+    "toleranceScore": 58,
+    "band": "Moderate Growth",
+    "rationale": "High capacity (long horizon, secure dual income, large reserve) but only moderate stated tolerance after a prior market scare. We anchor the plan to the lower of the two — Moderate Growth — and reduce risk via diversification rather than de-risking the equity weight."
+  },
+  "allocation": {
+    "current": [
+      { "assetClass": "US Equity", "percent": 30, "value": 375000 },
+      { "assetClass": "Employer Stock (concentrated)", "percent": 34, "value": 425000 },
+      { "assetClass": "International Equity", "percent": 8, "value": 100000 },
+      { "assetClass": "Bonds", "percent": 14, "value": 175000 },
+      { "assetClass": "Cash", "percent": 10, "value": 125000 },
+      { "assetClass": "Alternatives / Other", "percent": 4, "value": 50000 }
+    ],
+    "target": [
+      { "assetClass": "US Equity", "percent": 33 },
+      { "assetClass": "Employer Stock (concentrated)", "percent": 10 },
+      { "assetClass": "International Equity", "percent": 17 },
+      { "assetClass": "Bonds", "percent": 25 },
+      { "assetClass": "Cash", "percent": 5 },
+      { "assetClass": "Alternatives / Other", "percent": 10 }
+    ],
+    "keyChanges": [
+      "Reduce employer stock from 34% to 10% over 4 quarters using tax-aware lot selection to limit capital-gains drag.",
+      "Lift international equity 8% → 17% and bonds 14% → 25% to diversify the de-concentrated proceeds.",
+      "Cut cash 10% → 5%, redeploying ~$60K into the target mix."
+    ]
+  },
+  "goals": [
+    {
+      "name": "Retirement at age 60",
+      "targetYear": 2040,
+      "targetAmount": 4500000,
+      "fundedPercent": 68,
+      "onTrack": false,
+      "gap": "~$1.1M projected shortfall on the median path at the current savings rate.",
+      "recommendation": "Max both 401(k)s pre-tax and add a backdoor Roth; raises the funded path to ~90% without increasing portfolio risk."
+    },
+    {
+      "name": "College — elder child",
+      "targetYear": 2032,
+      "targetAmount": 250000,
+      "fundedPercent": 42,
+      "onTrack": false,
+      "gap": "529 balance covers ~2 of 4 years at current contributions.",
+      "recommendation": "Increase 529 funding by $1,200/mo; front-load using part of the cash drag."
+    },
+    {
+      "name": "Vacation home down payment",
+      "targetYear": 2034,
+      "targetAmount": 200000,
+      "fundedPercent": 25,
+      "onTrack": true,
+      "gap": "On track if employer-stock proceeds are partly earmarked here.",
+      "recommendation": "Hold this bucket in short-duration bonds, not equities, given the fixed 8-year horizon."
+    }
+  ],
+  "marketContext": {
+    "summary": "Mid-2026 backdrop: rate-cut expectations have steadied bond yields, large-cap US valuations remain elevated and concentrated in mega-cap tech, and international equities trade at a meaningful valuation discount. This reinforces (not drives) the plan's tilt away from a single US tech name and toward international and bonds.",
+    "asOf": "2026-06-23",
+    "sources": [
+      "[populated live by the Market Strategist's web_search — example placeholders]",
+      "https://www.federalreserve.gov/",
+      "https://www.spglobal.com/spdji/"
+    ],
+    "tacticalTilts": [
+      "Modest overweight to international developed equity within the target band.",
+      "Extend bond duration slightly to lock current yields ahead of expected cuts.",
+      "Do NOT time the exit of the employer stock on a market view — exit on a fixed, tax-aware schedule."
+    ]
+  },
+  "projections": {
+    "assumptions": "6.2% nominal expected return at the target allocation, 2.4% inflation, $90K/yr combined contributions rising 3%/yr, retirement spend $180K/yr from 2040. Bands show 10th / 50th / 90th percentile outcomes.",
+    "series": [
+      { "year": 2026, "age": 46, "low": 1250000, "mid": 1250000, "high": 1250000 },
+      { "year": 2028, "age": 48, "low": 1360000, "mid": 1455000, "high": 1560000 },
+      { "year": 2030, "age": 50, "low": 1510000, "mid": 1720000, "high": 1960000 },
+      { "year": 2032, "age": 52, "low": 1650000, "mid": 2010000, "high": 2460000 },
+      { "year": 2035, "age": 55, "low": 1900000, "mid": 2520000, "high": 3250000 },
+      { "year": 2040, "age": 60, "low": 2600000, "mid": 3580000, "high": 5050000 },
+      { "year": 2050, "age": 70, "low": 2380000, "mid": 4180000, "high": 7050000 },
+      { "year": 2060, "age": 80, "low": 1780000, "mid": 3820000, "high": 8100000 }
+    ]
+  },
+  "recommendations": [
+    { "id": "R1", "title": "De-risk the concentrated employer stock", "detail": "Sell down 34% → 10% across 4 quarters with tax-aware lot selection; this is the single highest-impact action in the plan.", "priority": "high", "owner": "Portfolio Analyst" },
+    { "id": "R2", "title": "Put the cash to work", "detail": "Redeploy ~$60K of the $125K cash into international equity and bonds per the target mix; keep ~$65K as the emergency reserve.", "priority": "high", "owner": "Portfolio Analyst" },
+    { "id": "R3", "title": "Close the retirement gap with pre-tax savings", "detail": "Max both 401(k)s and add a backdoor Roth; lifts the median retirement path from 68% to ~90% funded without raising risk.", "priority": "high", "owner": "Goals & Wellbeing Planner" },
+    { "id": "R4", "title": "Front-load the 529", "detail": "+$1,200/mo to the elder child's 529, partly funded from the cash drag, to close the 2-year coverage gap.", "priority": "medium", "owner": "Goals & Wellbeing Planner" },
+    { "id": "R5", "title": "Tax-aware sequencing", "detail": "Place bonds in tax-deferred accounts and the de-concentrated equity in taxable to improve after-tax return; harvest losses opportunistically.", "priority": "medium", "owner": "Tax & Estate Specialist" }
+  ],
+  "compliance": {
+    "verdict": "APPROVED",
+    "reviewer": "Compliance / Suitability Reviewer",
+    "notes": [
+      "Recommended allocation is consistent with the household's Moderate Growth profile and 14-year horizon.",
+      "No product recommendation exceeds the client's stated risk tolerance.",
+      "Concentration-reduction plan is tax-aware and time-phased, not market-timed.",
+      "All projections are presented as ranges, not guarantees."
+    ]
+  },
+  "disclaimers": "FICTIONAL DEMO — NOT FINANCIAL ADVICE. Generated by an AI multi-agent demo on synthetic data for a hackathon. No real persons, securities, or accounts are referenced. Not a recommendation, solicitation, or offer. Consult a licensed fiduciary advisor before making any financial decision."
+}
